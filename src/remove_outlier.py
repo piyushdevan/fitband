@@ -3,9 +3,9 @@ import sys
 
 sys.path.append("C:\\Users\\PIYUSH KUMAR\\coding\\fitband")
 
-from src.exception import CustomException
 from src.logger import logging
-from src.utils import mark_outliers_chauvenet
+from src.exception import CustomException
+from src.utils import save_object, load_object, mark_outliers_chauvenet
 import pandas as pd
 import numpy as np
 
@@ -13,18 +13,25 @@ import numpy as np
 from dataclasses import dataclass
 
 
+@dataclass
+class RemoveOutlierConfig:
+    data_path: str = os.path.join("notebook", "study.csv")
+    save_path: str = os.path.join("artifacts", "outlier_removed")
+
+
 class RemoveOutlier:
     def __init__(self):
-        pass
+        self.outlier_config = RemoveOutlierConfig()
 
-    def initiate_Outlier_Removal(self):
-        logging.info("Entered the outlier detection")
+    def initiate_Outlier_Removal(self, df):
         try:
-            df = pd.read_csv("artifacts\test.csv")
+            logging.info("Entered the outlier detection")
+
+            df.set_index("epoch (ms)", inplace=True)
 
             outliers_removed_df = df.copy()
+            outlier_columns = list(df.columns[0:6])
 
-            outlier_columns = df[1:7]
             for col in outlier_columns:
                 for label in df["label"].unique():
                     dataset = mark_outliers_chauvenet(df[df["label"] == label], col)
@@ -33,14 +40,14 @@ class RemoveOutlier:
                         (outliers_removed_df["label"] == label), col
                     ] = dataset[col]
 
-            logging.info("outlier detection done saving file in pickle")
-
-            outliers_removed_df.to_csv("artifacts\train.csv")
+            logging.info("outlier detection done  -saving file ")
+            save_object(self.outlier_config.save_path, outliers_removed_df)
+            return outliers_removed_df
 
         except Exception as e:
             raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
-    obj = Re()
-    train_data, test_data = obj.initiate_data_ingestion()
+    obj = RemoveOutlier()
+    obj.initiate_Outlier_Removal()
