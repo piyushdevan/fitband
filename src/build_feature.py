@@ -3,6 +3,8 @@ import sys
 
 sys.path.append("C:\\Users\\PIYUSH KUMAR\\coding\\fitband")
 
+# from fancyimpute import IterativeImputer
+
 from src.logger import logging
 from src.exception import CustomException
 from src.utils import (
@@ -15,7 +17,6 @@ from src.utils import (
 )
 import pandas as pd
 import numpy as np
-from sklearn.cluster import KMeans
 
 
 from dataclasses import dataclass
@@ -23,8 +24,7 @@ from dataclasses import dataclass
 
 @dataclass
 class BuildFeaturesConfig:
-    save_path: str = os.path.join("artifacts", "feature_build")
-    data_path: str = os.path.join("artifacts", "outlier_removed")
+    save_path: str = os.path.join("artifacts", "feature_build.pkl")
     LowPass = LowPassFilter()
     PCA = PrincipalComponentAnalysis()
     NumAbs = NumericalAbstraction()
@@ -43,7 +43,7 @@ class BuildFeature:
             FreqAbs = FourierTransformation()
 
             logging.info("start feature building")
-            predictor_columns = list(df.columns[:6])
+            predictor_columns = list(df.columns[0:6])
 
             for col in predictor_columns:
                 df[col] = df[col].interpolate()
@@ -89,6 +89,10 @@ class BuildFeature:
                 df_temporal = NumAbs.abstract_numerical(df_temporal, [col], ws, "mean")
                 df_temporal = NumAbs.abstract_numerical(df_temporal, [col], ws, "std")
 
+            cols = df_temporal.filter(like="_temp_", axis=1)
+            for col in cols:
+                df_temporal[col].fillna(df_temporal[col].mean(), inplace=True)
+
             logging.info("Adding Fourier_transform")
             df_freq = df_temporal.copy().reset_index()
             FreqAbs = FourierTransformation()
@@ -97,26 +101,15 @@ class BuildFeature:
             ws = int(2800 / 200)
 
             df_freq = FreqAbs.abstract_frequency(df_freq, predictor_columns, ws, fs)
-            df_freq = df_freq.set_index("epoch (ms)", drop=True)
 
-            logging.info("Adding cluster")
+            cols = df_freq.filter(like="_freq_", axis=1)
+            for col in cols:
+                df_freq[col].fillna(df_freq[col].mean(), inplace=True)
 
-            df_cluster = df_freq.copy()
-            cluster_columns = ["acc_x", "acc_y", "acc_z"]
-            k_values = range(2, 10)
-            inertias = []
+            df_freq = df_freq.set_index("epoch (ms)")
+            save_object(self.outlier_config.save_path, df_freq)
 
-            kmeans = KMeans(n_clusters=5, n_init=20, random_state=0)
-            subset = df_cluster[cluster_columns]
-            df_cluster["cluster"] = kmeans.fit_predict(subset)
-            df_cluster.dropna(inplace=True)
-            save_object(self.outlier_config.save_path, df_cluster)
-            return df_cluster
+            return df_freq
 
         except Exception as e:
             raise CustomException(e, sys)
-
-
-if __name__ == "__main__":
-    obj = BuildFeature()
-    obj.initiate_Feature_Building()

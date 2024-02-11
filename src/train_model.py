@@ -45,70 +45,70 @@ class ModelTrainer:
             )
             logging.info("Splitting done")
             models = {
-                "Decision Tree": DecisionTreeClassifier(),
+                # "Decision Tree": DecisionTreeClassifier(),
                 "Random Forest": RandomForestClassifier(),
-                "Neural Network": MLPClassifier(),
-                "Support Vector Kernel": SVC(),
-                "Support vector Without Kernel": LinearSVC(),
-                "K Nearest Neighbour": KNeighborsClassifier(),
+                # "Neural Network": MLPClassifier(),
+                # "K Nearest Neighbour": KNeighborsClassifier(),
+                # "Support vector Without Kernel": LinearSVC(),
+                # "Support Vector Kernel": SVC(),
             }
             params = {
-                "Decision Tree": {
-                    "min_samples_leaf": [2, 10, 50, 100, 200],
-                    "criterion": ["gini", "entropy"],
-                },
+                # "Decision Tree": {
+                #     "min_samples_leaf": [2, 10, 50, 100, 200],
+                #     "criterion": ["gini", "entropy"],
+                # },
                 "Random Forest": {
                     "min_samples_leaf": [2, 10, 50, 100, 200],
                     "n_estimators": [10, 50, 100],
                     "criterion": ["gini", "entropy"],
                 },
-                "Neural Network": {
-                    "hidden_layer_sizes": [
-                        (5,),
-                        (10,),
-                        (25,),
-                        (100,),
-                        (
-                            100,
-                            5,
-                        ),
-                        (
-                            100,
-                            10,
-                        ),
-                    ],
-                    "activation": ["logistic"],
-                    "learning_rate": ["adaptive"],
-                    "max_iter": [1000, 2000],
-                    "alpha": [0.0001],
-                },
-                "Support Vector Kernel": {
-                    "kernel": ["rbf", "poly"],
-                    "gamma": [1e-3, 1e-4],
-                    "C": [1, 10, 100],
-                },
-                "Support vector Without Kernel": {
-                    "max_iter": [1000, 2000],
-                    "tol": [1e-3, 1e-4],
-                    "C": [1, 10, 100],
-                },
-                "K Nearest Neighbour": {"n_neighbors": [1, 2, 5, 10]},
+                # "Neural Network": {
+                #     "hidden_layer_sizes": [
+                #         (5,),
+                #         (10,),
+                #         (25,),
+                #         (100,),
+                #         (
+                #             100,
+                #             5,
+                #         ),
+                #         (
+                #             100,
+                #             10,
+                #         ),
+                #     ],
+                #     "activation": ["logistic"],
+                #     "learning_rate": ["adaptive"],
+                #     "max_iter": [1000, 2000],
+                #     "alpha": [0.0001],
+                # },
+                # "K Nearest Neighbour": {"n_neighbors": [1, 2, 5, 10]},
+                # "Support vector Without Kernel": {
+                #     "max_iter": [1000, 2000],
+                #     "tol": [1e-3, 1e-4],
+                #     "C": [1, 10, 100],
+                # },
+                # "Support Vector Kernel": {
+                #     "kernel": ["rbf", "poly"],
+                #     "gamma": [1e-3, 1e-4],
+                #     "C": [1, 10, 100],
+                # },
             }
-            selected_features = [
-                "pca_1",
-                "acc_x_freq_0.0_Hz_ws_14",
-                "acc_z_freq_0.0_Hz_ws_14",
-                "acc_y_temp_mean_ws_5",
-                "gyr_r",
-                "gyr_y_freq_1.429_Hz_ws_14",
-                "gyr_y_freq_0.357_Hz_ws_14",
-                "acc_r_freq_0.357_Hz_ws_14",
-                "gyr_z_freq_0.714_Hz_ws_14",
-            ]
+            # selected_features = [
+            #     "pca_1",
+            #     "acc_x_freq_0.0_Hz_ws_14",
+            #     "acc_z_freq_0.0_Hz_ws_14",
+            #     "acc_y_temp_mean_ws_5",
+            #     "gyr_r",
+            #     "gyr_y_freq_1.429_Hz_ws_14",
+            #     "gyr_y_freq_0.357_Hz_ws_14",
+            #     "acc_r_freq_0.357_Hz_ws_14",
+            #     "gyr_z_freq_0.714_Hz_ws_14",
+            # ]
             model_report: dict = evaluate_models(
-                X_train=X_train[selected_features],
+                X_train=X_train,
                 y_train=y_train,
-                X_test=X_test[selected_features],
+                X_test=X_test,
                 y_test=y_test,
                 models=models,
                 param=params,
@@ -135,15 +135,9 @@ class ModelTrainer:
 
             predicted = best_model.predict(X_test)
 
-            r2_square = r2_score(y_test, predicted)
+            r2_square = accuracy_score(y_test, predicted)
+            print(r2_square)
             return r2_square
 
         except Exception as e:
             raise CustomException(e, sys)
-
-
-if __name__ == "__main__":
-    df = pd.read_csv("artifacts/data.csv")
-    obj = ModelTrainer()
-    score = obj.initiate_model_trainer(df)
-    print(score)

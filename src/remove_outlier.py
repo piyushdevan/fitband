@@ -15,8 +15,7 @@ from dataclasses import dataclass
 
 @dataclass
 class RemoveOutlierConfig:
-    data_path: str = os.path.join("notebook", "study.csv")
-    save_path: str = os.path.join("artifacts", "outlier_removed")
+    save_path: str = os.path.join("artifacts", "outlier_removed.pkl")
 
 
 class RemoveOutlier:
@@ -46,8 +45,3 @@ class RemoveOutlier:
 
         except Exception as e:
             raise CustomException(e, sys)
-
-
-if __name__ == "__main__":
-    obj = RemoveOutlier()
-    obj.initiate_Outlier_Removal()
